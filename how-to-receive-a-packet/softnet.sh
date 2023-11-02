@@ -30,11 +30,11 @@ EOI
 
 
 softnet_stats_header() {
-	printf "%3s %10s %10s %10s %10s %10s %10s\n" cpu total dropped squeezed collision rps flow_limit
+	printf "%3s %10s %10s %10s %10s %10s %10s %10s\n" cpu total dropped squeezed collision rps flow_limit backlog_len
 }
 
 softnet_stats_format() {
-	printf "%3u %10lu %10lu %10lu %10lu %10lu %10lu\n" "$1" "0x$2" "0x$3" "0x$4" "0x$5" "0x$6" "0x$7"
+	printf "%3u %10lu %10lu %10lu %10lu %10lu %10lu %10lu\n" "$1" "0x$2" "0x$3" "0x$4" "0x$5" "0x$6" "0x$7" "0x$8"
 }
 
 
@@ -42,10 +42,11 @@ getopts h flag && usage
 
 cpu=0
 softnet_stats_header
-while read total dropped squeezed j1 j2 j3 j4 j5 collision rps flow_limit_count
+while read total dropped squeezed j1 j2 j3 j4 j5 collision rps flow_limit_count backlog_len cpu_id input_qlen process_qlen
 do
 	# the last field does not appear on older kernels
 	# https://github.com/torvalds/linux/commit/99bbc70741903c063b3ccad90a3e06fc55df9245#diff-5dd540e75b320a50866267e9c52b3289R165
-	softnet_stats_format $((cpu++)) "$total" "$dropped" "$squeezed" "$collision" "$rps" "${flow_limit_count:-0}"
-done < /proc/net/softnet_stat
 
+  	# Output source: https://github.com/torvalds/linux/blob/59da2d7b0e99c58590a0d3d16905cda27b76da3a/net/core/net-procfs.c#L181
+	softnet_stats_format $((cpu++)) "$total" "$dropped" "$squeezed" "$collision" "$rps" "${flow_limit_count:-0}" "${backlog_len:-0}"
+done < /proc/net/softnet_stat
